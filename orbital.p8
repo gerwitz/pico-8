@@ -17,8 +17,8 @@ function add_planet(size)
   p.x = rnd(128)
   p.y = rnd(128)
   -- motion vector
-  p.dx = 0
-  p.dy = 0
+  p.dx = rnd(2)-1
+  p.dy = rnd(2)-1
 
   add(planets, p)
 end
