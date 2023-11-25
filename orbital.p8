@@ -43,8 +43,8 @@ end
 
 function move(planet)
   mass = planet.size^2
-  planet.x += (planet.dx/mass)
-  planet.y += (planet.dy/mass)
+  planet.x += (planet.dx/mass) % 128
+  planet.y += (planet.dy/mass) % 128
 end
 
 function _init()
