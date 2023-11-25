@@ -5,10 +5,13 @@ __lua__
 -- a physics experiment by @gerwitz
 
 planets={}
+next_id=0
 g = 0.001 -- will be divided by distance, multiplied by mass
 
 function add_planet(size)
   p = {}
+  p.id = next_id
+  next_id += 1
   p.size = size or (rnd(3)+1)
   -- position
   p.x = rnd(128)
@@ -22,12 +25,14 @@ end
 
 function apply_gravity(planet)
   for p in all(planets) do
-    if ((p.x == planet.x) and (p.y == planet.y)) then
-      printh("same")
-    else
+    if (p.id != planet.id) then
       x_delta = planet.x - p.x
       y_delta = planet.y - p.y
       distance = approx_magnitude(x_delta, y_delta)
+      if (distance < planet.size + p.size) then
+        merge(planet, p)
+        return
+      end
       gforce = g * (p.size^2 + planet.size^2) / -distance
       planet.dx += x_delta * gforce
       planet.dy += y_delta * gforce
@@ -35,7 +40,18 @@ function apply_gravity(planet)
   end
 end
 
-
+function merge(survivor, victim)
+  -- older survives
+  if (survivor.id < victim.id) survivor, victim = victim, survivor
+  s_mass = survivor.size^2
+  v_mass = victim.size^2
+  new_dx = (survivor.dx/s_mass) + (victim.dx/v_mass)
+  new_dy = (survivor.dy/s_mass) + (victim.dy/v_mass)
+  survivor.dx = new_dx
+  survivor.dy = new_dy
+  survivor.size = survivor.size + victim.size
+  del(planets, victim)
+end
 
 function move(planet)
   mass = planet.size^2
@@ -48,11 +64,11 @@ function _init()
   add_planet(1)
   add_planet(1)
   add_planet(1)
-  add_planet(2)
-  add_planet(4)
+  add_planet(1)
+  add_planet(1)
 end
 
-function _update60()
+function _update()
   foreach(planets, apply_gravity)
   foreach(planets, move)
 end
