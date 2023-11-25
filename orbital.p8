@@ -33,7 +33,7 @@ function apply_gravity(planet)
         merge(planet, p)
         return
       end
-      gforce = g * (p.size^2 + planet.size^2) / -distance
+      gforce = g * (p.size^3 + planet.size^3) / -(distance)
       planet.dx += x_delta * gforce
       planet.dy += y_delta * gforce
     end
@@ -54,7 +54,7 @@ function merge(survivor, victim)
 end
 
 function move(planet)
-  mass = planet.size^2
+  mass = planet.size^3
   planet.x = (planet.x + planet.dx/mass) % 128
   planet.y = (planet.y + planet.dy/mass) % 128
 end
@@ -66,9 +66,12 @@ function _init()
   add_planet(1)
   add_planet(1)
   add_planet(1)
+  add_planet(1)
+  add_planet(1)
+  add_planet(1)
 end
 
-function _update()
+function _update60()
   foreach(planets, apply_gravity)
   foreach(planets, move)
 end
