@@ -35,11 +35,7 @@ function apply_gravity(planet)
   end
 end
 
--- thanks to https://www.lexaloffle.com/bbs/?tid=36059
-function approx_magnitude(a,b)
- local a0, b0 = abs(a), abs(b)
- return max(a0,b0)*0.9609 + min(a0,b0)*0.3984
-end
+
 
 function move(planet)
   mass = planet.size^2
@@ -62,18 +58,67 @@ function _update60()
 end
 
 function _draw()
-	cls()
+  grayvid()
+  cls(15)
+
   for p in all(planets) do
-    spr(p.size, p.x, p.y)
+    draw_disc(p.x, p.y, p.size+.3)
   end
 end
 
-__gfx__
-00000000000000000000000000000000000000000000000000677600000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000660000067760006777760000000000000000000000000000000000000000000000000000000000000000000000000
-00700700000000000006600000577500007777000677776067777776000000000000000000000000000000000000000000000000000000000000000000000000
-00077000000660000067760000777700067777600777777077777777000000000000000000000000000000000000000000000000000000000000000000000000
-00077000000660000067760000777700067777600777777077777777000000000000000000000000000000000000000000000000000000000000000000000000
-00700700000000000006600000577500007777000677776067777776000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000660000067760006777760000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000677600000000000000000000000000000000000000000000000000000000000000000000000000
+-- distance without sqrt
+-- thanks to https://www.lexaloffle.com/bbs/?tid=36059
+function approx_magnitude(a,b)
+ local a0, b0 = abs(a), abs(b)
+ return max(a0,b0)*0.9609 + min(a0,b0)*0.3984
+end
+
+-- anti-aliased filled circle
+-- thanks to https://www.lexaloffle.com/bbs/?tid=30810
+local ramp={[0]=7,7,7,7,7,6,6,6,13,13,13,5,5,1,1,0}
+function grayvid()
+    for i=0,15 do
+        pal(i,i,0)
+        pal(i,ramp[i],1)
+     palt(i,false)
+    end
+end
+function draw_disc(x0,y0,r)
+  if(r==0) return
+  local x,y,dx,dy=flr(r),0,1,1
+  r*=2
+  local err=dx-r
+
+  while x>=y do
+    local dist=1+err/r
+
+    rectfill(x0-x+1,y0+y,x0+x-1,y0+y,0)
+    rectfill(x0-x+1,y0-y,x0+x-1,y0-y,0)
+    rectfill(x0-y,y0-x+1,x0+y,y0-x+1,0)
+    rectfill(x0-y,y0+x-1,x0+y,y0+x-1,0)
+
+    shadepix(x0+x,y0+y,dist)
+    shadepix(x0+y,y0+x,dist)
+    shadepix(x0-y,y0+x,dist)
+    shadepix(x0+x,y0-y,dist)
+
+    shadepix(x0-x,y0+y,dist)
+    shadepix(x0-y,y0-x,dist)
+    shadepix(x0+y,y0-x,dist)
+    shadepix(x0-x,y0-y,dist)
+
+    if err<=0 then
+      y+=1
+      err+=dy
+      dy+=2
+    end
+    if err>0 then
+      x-=1
+      dx+=2
+      err+=dx-r
+    end
+  end
+end
+function shadepix(x,y,k)
+  pset(x, y, pget(x,y)*k)
+end
