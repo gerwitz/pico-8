@@ -7,15 +7,24 @@ __lua__
 planets={}
 next_id=0
 g = 0.001 -- will be divided by distance, multiplied by mass
+logfile = "orbital.txt"
 
-function add_planet(size)
+function log(msg)
+  printh(tostr(time())..": "..tostr(msg), logfile)
+  printh(#planets.." planets:", logfile)
+  for p in all(planets) do
+    printh("- "..tostr(p.x)..","..tostr(p.y).."/"..tostr(p.dx)..","..tostr(p.dy).." - "..tostr(p.size), logfile)
+  end
+end
+
+function add_planet(size, x, y)
   p = {}
   p.id = next_id
   next_id += 1
   p.size = size or (rnd(3)+1)
   -- position
-  p.x = rnd(128)
-  p.y = rnd(128)
+  p.x = x or rnd(128)
+  p.y = y or rnd(128)
   -- motion vector
   p.dx = rnd(2)-1
   p.dy = rnd(2)-1
@@ -51,6 +60,22 @@ function merge(survivor, victim)
   survivor.dy = new_dy
   survivor.size = survivor.size + victim.size
   del(planets, victim)
+  --if (survivor.size > 7) _init()
+  if (survivor.size > 7) explode(survivor)
+end
+
+function explode(donor)
+  log("start exploding")
+  local center_x = donor.x
+  local center_y = donor.y
+  del(planets, donor)
+  for i=0,7 do
+    -- add_planet(1, center_x + cos(i/7), center_y + sin(i/7))
+    -- add_planet(1, 61 + 3+cos(i/7), 61 + 3*sin(i/7))
+    add_planet(1, (center_x + 3*i) % 128, (center_y + 3*i) % 128)
+    -- add_planet(1)
+  end
+  log("end exploding")
 end
 
 function move(planet)
@@ -60,15 +85,11 @@ function move(planet)
 end
 
 function _init()
+  printh("init", logfile, true)
   planets={}
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
-  add_planet(1)
+  for i=0,7 do
+    add_planet(1, rnd(128), rnd(128))
+  end
 end
 
 function _update60()
