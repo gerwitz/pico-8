@@ -9,7 +9,7 @@ next_id=0
 
 g = 0.001 -- will be divided by distance, multiplied by mass
 max_size = 5
-max_speed = 3
+max_speed = 4
 logfile = "orbital.txt"
 
 function log(msg)
@@ -61,17 +61,18 @@ function apply_gravity(planet)
 end
 
 function merge(survivor, victim)
-  -- older survives
-  if (survivor.id < victim.id) survivor, victim = victim, survivor
-  s_mass = survivor.size^2
-  v_mass = victim.size^2
-  new_dx = (survivor.dx/s_mass) + (victim.dx/v_mass)
-  new_dy = (survivor.dy/s_mass) + (victim.dy/v_mass)
+  -- bigger survives
+  if (survivor.size < victim.size) survivor, victim = victim, survivor
+  new_size = survivor.size + victim.size
+  -- s_inertia = survivor.size+1000/new_size+1000
+  -- v_inertia = victim.size+1000/new_size+1000
+  s_inertia, v_inertia = 2, 2
+  new_dx = (survivor.dx * s_inertia) + (victim.dx * v_inertia)
+  new_dy = (survivor.dy * s_inertia) + (victim.dy * v_inertia)
+  del(planets, victim)
+  survivor.size = new_size
   survivor.dx = new_dx
   survivor.dy = new_dy
-  survivor.size = survivor.size + victim.size
-  del(planets, victim)
-  --if (survivor.size > 7) _init()
   if (survivor.size > max_size) explode(survivor)
 end
 
@@ -81,7 +82,7 @@ function explode(donor)
   local center_y = donor.y
   del(planets, donor)
   for i=0,fragments-1 do
-    add_planet(1, (center_x + (fragments/2)*cos(i/8))%128, (fragments/2)*sin(i/8)%128, cos(i/8), sin(i/8))
+    add_planet(1, (center_x + (fragments/2)*cos(i/fragments))%128, (center_y + (fragments/2)*sin(i/fragments))%128, cos(i/fragments), sin(i/fragments))
   end
 end
 
