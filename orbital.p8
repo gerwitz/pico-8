@@ -6,7 +6,10 @@ __lua__
 
 planets={}
 next_id=0
+
 g = 0.001 -- will be divided by distance, multiplied by mass
+max_size = 5
+max_speed = 3
 logfile = "orbital.txt"
 
 function log(msg)
@@ -17,7 +20,7 @@ function log(msg)
   end
 end
 
-function add_planet(size, x, y)
+function add_planet(size, x, y, dx, dy)
   p = {}
   p.id = next_id
   next_id += 1
@@ -26,8 +29,8 @@ function add_planet(size, x, y)
   p.x = x or rnd(128)
   p.y = y or rnd(128)
   -- motion vector
-  p.dx = rnd(2)-1
-  p.dy = rnd(2)-1
+  p.dx = dx or rnd(max_speed)-(max_speed/2)
+  p.dy = dy or rnd(max_speed)-(max_speed/2)
 
   add(planets, p)
 end
@@ -43,8 +46,16 @@ function apply_gravity(planet)
         return
       end
       gforce = g * (p.size^3 + planet.size^3) / -(distance)
-      planet.dx += x_delta * gforce
-      planet.dy += y_delta * gforce
+      new_dx = planet.dx + x_delta * gforce
+      new_dy = planet.dy + y_delta * gforce
+      speed = abs(new_dx) + abs(new_dy)
+      if (speed > max_speed) then
+        slowdown = 1 / (speed / max_speed)
+        new_dx *= slowdown
+        new_dy *= slowdown
+      end
+      planet.dx = new_dx
+      planet.dy = new_dy
     end
   end
 end
@@ -61,21 +72,17 @@ function merge(survivor, victim)
   survivor.size = survivor.size + victim.size
   del(planets, victim)
   --if (survivor.size > 7) _init()
-  if (survivor.size > 7) explode(survivor)
+  if (survivor.size > max_size) explode(survivor)
 end
 
 function explode(donor)
-  log("start exploding")
+  local fragments = donor.size
   local center_x = donor.x
   local center_y = donor.y
   del(planets, donor)
-  for i=0,7 do
-    -- add_planet(1, center_x + cos(i/7), center_y + sin(i/7))
-    -- add_planet(1, 61 + 3+cos(i/7), 61 + 3*sin(i/7))
-    add_planet(1, (center_x + 3*i) % 128, (center_y + 3*i) % 128)
-    -- add_planet(1)
+  for i=0,fragments-1 do
+    add_planet(1, (center_x + (fragments/2)*cos(i/8))%128, (fragments/2)*sin(i/8)%128, cos(i/8), sin(i/8))
   end
-  log("end exploding")
 end
 
 function move(planet)
@@ -85,9 +92,8 @@ function move(planet)
 end
 
 function _init()
-  printh("init", logfile, true)
   planets={}
-  for i=0,7 do
+  for i=0,6 do
     add_planet(1, rnd(128), rnd(128))
   end
 end
